@@ -1,0 +1,7 @@
+# Ignore compiled executables
+server
+client
+test*
+
+# Ignore macOS metadata
+.DS_Store
