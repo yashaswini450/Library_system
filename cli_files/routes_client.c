@@ -3,8 +3,21 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <termios.h>
 #include "../auth.h"
 #include "cli.h"
+
+// Reads a password without echoing characters to the terminal
+static void readPassword(char *password, int maxLen) {
+    struct termios old_term, new_term;
+    tcgetattr(STDIN_FILENO, &old_term);
+    new_term = old_term;
+    new_term.c_lflag &= ~(tcflag_t)ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_term);
+    scanf("%s", password);
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
+    printf("\n"); // move to next line after hidden input
+}
 
 
 // Function to handle admin client interactions
@@ -44,14 +57,16 @@ void admin_client(int client_socket) {
                 printf("%s", buffer);
                 memset(buffer, '\0', sizeof(buffer));
 
-                scanf("%s", class_id); // Input class ID
+                scanf("%3s", class_id); // Input class ID (max 3 chars + null)
                 send(client_socket, class_id, sizeof(class_id), 0);
 
                 recv(client_socket, buffer, MAX_BUFFSIZE, 0); // Prompt for name
                 printf("%s", buffer);
                 memset(buffer, '\0', sizeof(buffer));
 
-                scanf("%s", name); // Input name
+                // Consume leftover newline before reading full line
+                int c; while ((c = getchar()) != '\n' && c != EOF);
+                scanf(" %49[^\n]", name); // Input full book name (supports spaces)
                 send(client_socket, name, sizeof(name), 0);
 
                 recv(client_socket, buffer, MAX_BUFFSIZE, 0); // Prompt for copies
@@ -257,7 +272,7 @@ void registerAccount_client(int client_socket) {
     recv(client_socket, buffer, MAX_BUFFSIZE, 0); // Prompt for password
     printf("%s", buffer);
     memset(buffer, '\0', sizeof(buffer));
-    scanf("%s", password);
+    readPassword(password, MAX_PASSWORD_LENGTH); // Hidden input
     send(client_socket, password, MAX_PASSWORD_LENGTH, 0);
 
     recv(client_socket, buffer, MAX_BUFFSIZE, 0); // Prompt for account type
@@ -288,7 +303,7 @@ int login_client(int client_socket) {
     recv(client_socket, buffer, MAX_BUFFSIZE, 0); // Prompt for password
     printf("%s", buffer);
     memset(buffer, '\0', sizeof(buffer));
-    scanf("%s", password);
+    readPassword(password, MAX_PASSWORD_LENGTH); // Hidden input
     send(client_socket, password, MAX_PASSWORD_LENGTH, 0);
 
     recv(client_socket, buffer, MAX_BUFFSIZE, 0); // Prompt for account type

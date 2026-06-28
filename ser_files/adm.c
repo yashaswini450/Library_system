@@ -181,7 +181,7 @@ void updateBookCopies(int client_socket, int testing_mode) {
     while (fread(&book, sizeof(struct Book), 1, bookFile)) {
         if (book.delete == 0 && strcmp(book.class_id, class_id) == 0) {
             found = 1;
-            book.copies += new_copies;
+            book.copies = new_copies; // Set (not add) the new copies count
             fseek(bookFile, -sizeof(struct Book), SEEK_CUR);
             fwrite(&book, sizeof(struct Book), 1, bookFile);
             break;

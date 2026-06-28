@@ -233,6 +233,7 @@ void registerAccount(int client_socket) {
     accountType = atoi(accountTypeStr);
 
     FILE *file;
+    int fd;
     if (accountType == 0) {
         file = fopen(memAccs, "rb+");
     } else if (accountType == 1) {
@@ -247,8 +248,21 @@ void registerAccount(int client_socket) {
         return;
     }
 
-    int fd = fileno(file);
+    fd = fileno(file);
     lock_file(fd, F_WRLCK); // Acquire a write lock
+
+    // Check for duplicate username before adding
+    struct Account existing;
+    fseek(file, 0, SEEK_SET);
+    while (fread(&existing, sizeof(struct Account), 1, file)) {
+        if (strcmp(existing.username, username) == 0) {
+            lock_file(fd, F_UNLCK);
+            fclose(file);
+            send(client_socket, "Username already exists. Please choose a different username.\n",
+                 strlen("Username already exists. Please choose a different username.\n"), 0);
+            return;
+        }
+    }
 
     struct Account newAccount;
     strcpy(newAccount.username, username);
