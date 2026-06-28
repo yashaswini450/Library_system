@@ -15,6 +15,19 @@
 #define PORT 8080
 #define MAX_CONNECTIONS 5
 
+// Creates all required .bin files if they don't already exist.
+// Needed on fresh clones where db_files/ is empty and fopen("rb+") would fail.
+static void init_db_files(void) {
+    const char *files[] = { admAccs, memAccs, booksCol, allocList };
+    int n = sizeof(files) / sizeof(files[0]);
+    for (int i = 0; i < n; i++) {
+        FILE *f = fopen(files[i], "ab"); // "ab" creates if missing, never truncates
+        if (f) fclose(f);
+        else { perror(files[i]); exit(EXIT_FAILURE); }
+    }
+    printf("Database files initialised.\n");
+}
+
 int main() {
     int server_fd, new_socket;
     struct sockaddr_in address;
@@ -50,6 +63,7 @@ int main() {
         perror("listen");
         exit(EXIT_FAILURE);
     }
+    init_db_files();
     printf("Server running at 127.0.0.1:%d...\n", PORT);
 
     while (1) {
