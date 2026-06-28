@@ -26,10 +26,16 @@ int main() {
     }
 
     int opt = 1;
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-        perror("setsockopt");
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+        perror("setsockopt SO_REUSEADDR");
         exit(EXIT_FAILURE);
     }
+#ifdef SO_REUSEPORT
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt))) {
+        perror("setsockopt SO_REUSEPORT");
+        exit(EXIT_FAILURE);
+    }
+#endif
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
