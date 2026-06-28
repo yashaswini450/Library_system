@@ -1,0 +1,23 @@
+# ── Stage 1: Build ────────────────────────────────────────────────────────────
+FROM gcc:14 AS builder
+
+WORKDIR /app
+COPY . .
+RUN gcc -Wall -w -Wextra -I. \
+        -o server \
+        ser_files/ser.c ser_files/mem.c ser_files/adm.c ser_files/routes_server.c auth.c
+
+# ── Stage 2: Runtime ──────────────────────────────────────────────────────────
+FROM debian:bookworm-slim
+
+WORKDIR /app
+
+# Copy compiled server binary
+COPY --from=builder /app/server .
+
+# Create the database directory (populated at runtime via volume or init)
+RUN mkdir -p db_files
+
+EXPOSE 8080
+
+CMD ["./server"]

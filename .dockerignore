@@ -1,0 +1,11 @@
+# Don't send these to the Docker build context
+.git
+*.bin
+db_files/*.bin
+server
+client
+*.o
+*.dSYM
+.DS_Store
+README.md
+implementation_plan.md

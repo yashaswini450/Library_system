@@ -24,3 +24,6 @@ db_files/*.bin
 *.swp
 *.swo
 *~
+
+# Docker
+.dockerignore

@@ -1,0 +1,35 @@
+services:
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: library_server
+    ports:
+      - "8080:8080"        # expose so you can also connect from your local machine
+    volumes:
+      - db_data:/app/db_files   # persist database across container restarts
+    networks:
+      - libnet
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: library_client
+    environment:
+      - SERVER_HOST=server    # resolve the server by its service name on libnet
+    stdin_open: true          # keep stdin open for interactive input
+    tty: true                 # allocate a pseudo-TTY (needed for terminal prompts)
+    networks:
+      - libnet
+    depends_on:
+      - server
+
+networks:
+  libnet:
+    driver: bridge
+
+volumes:
+  db_data:     # named volume — data survives container stop/restart
